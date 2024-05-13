@@ -1,0 +1,64 @@
+DELIMITER //
+DROP PROCEDURE IF EXISTS ValidateNewContact;
+CREATE PROCEDURE ValidateNewContact(
+  IN contactId VARCHAR(30),
+  IN fullname NVARCHAR(30),
+  IN phone VARCHAR(10),
+  IN email VARCHAR(30)
+)
+BEGIN
+  DECLARE isValid INT;
+
+  -- Check for empty fields
+  IF LENGTH(fullname) = 0 OR LENGTH(phone) = 0 OR LENGTH(email) = 0 THEN
+    SELECT 5; -- Missing required fields
+    -- RETURN; -- Exit the procedure-- 
+  END IF;
+
+  -- Check ID already exists
+  SET isValid = 0;
+  SELECT EXISTS (SELECT 1 FROM contact WHERE id = contactId) INTO isValid;
+  IF isValid = 1 THEN
+    SELECT 2; -- ID already exists
+    -- RETURN; -- Exit the procedure
+  END IF;
+
+  -- Validate email format
+  SET isValid = ValidateEmailFormat(email);
+  IF isValid = 0 THEN
+    SELECT 3; -- Invalid email format
+    -- RETURN; -- Exit the procedure
+  END IF;
+
+  -- Validate phone number format
+  SET isValid = ValidatePhoneFormat(phone);
+  IF isValid = 0 THEN
+    SELECT 4; -- Invalid phone number format
+    -- RETURN; -- Exit the procedure
+  END IF;
+
+	INSERT INTO contact (id, fullname, phone, email) VALUES (contactId, fullname, phone, email);
+  SELECT 1; -- Valid contact data
+END;
+//
+
+DROP FUNCTION IF EXISTS ValidateEmailFormat;
+CREATE FUNCTION ValidateEmailFormat(email VARCHAR(255))
+  RETURNS TINYINT
+  DETERMINISTIC
+  BEGIN
+    RETURN (LENGTH(email) > 0 AND email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$');
+  END;
+//
+
+DROP FUNCTION IF EXISTS ValidatePhoneFormat;
+CREATE FUNCTION ValidatePhoneFormat(phone VARCHAR(10))
+  RETURNS TINYINT
+  DETERMINISTIC
+  BEGIN
+    RETURN (LENGTH(phone) > 0 AND phone REGEXP '^0[0-9]+$');
+  END;
+//
+
+DELIMITER ;
+

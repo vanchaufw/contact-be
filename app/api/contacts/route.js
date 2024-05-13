@@ -22,16 +22,16 @@ export const POST = async (req) => {
   }
 
   try {
-    const { id, fullname, phone } = await req.json();
-    if (!id || !fullname || !phone) {
+    const { id, fullname, phone, email } = await req.json();
+    if (!id || !fullname || !phone || !email) {
       return new Response(JSON.stringify({ msg: "Empty field" }), {
         status: 404,
         headers,
       });
     }
     await excuteQuery({
-      query: "INSERT INTO contact (id, fullname, phone) VALUES (?, ?, ?);",
-      values: [id, fullname, phone],
+      query: "INSERT INTO contact (id, fullname, phone, email) VALUES (?, ?, ?, ?);",
+      values: [id, fullname, phone, email],
     });
     const headers = {
       "Access-Control-Allow-Origin": "*",
